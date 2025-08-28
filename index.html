@@ -1,1 +1,963 @@
-<h1>Welcome to you!</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业检测图像对比分析系统</title>
+    <style>
+        /* 样式部分保持不变，只添加三列布局的样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 2000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+            border-radius: 12px;
+            color: white;
+        }
+        
+        h1 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .description {
+            color: #ecf0f1;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .setup-panel {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            padding: 25px;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .main-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .control-panel {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 12px;
+            color: #ecf0f1;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 5px;
+        }
+        
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        
+        select:hover, button:hover {
+            background: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button.active {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .image-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .image-controls button {
+            flex: 1;
+            text-align: center;
+        }
+        
+        /* 动态布局 - 根据阶段显示不同列数 */
+        .comparison-view.two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .comparison-view.three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .image-column {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-column:hover {
+            transform: translateY(-5px);
+        }
+        
+        .column-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+            color: white;
+            padding: 18px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .image-container {
+            height: 500px;
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .zoomable-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            border: 2px solid #ddd;
+            will-change: transform;
+        }
+        
+        .zoomable-image:hover {
+            border-color: #3498db;
+        }
+        
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .tab-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            background: #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .image-info {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-align: center;
+        }
+        
+        .folder-path {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            word-break: break-all;
+        }
+        
+        .reset-view {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .reset-view:hover {
+            background: rgba(41, 128, 185, 0.9);
+            transform: scale(1.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1200px) {
+            .comparison-view.two-column,
+            .comparison-view.three-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>实验结果图像对比分析系统</h1>
+            <p class="description">对比分析在不同数据集上的实验设置、结果和评估图像</p>
+        </header>
+        
+        <div class="main-controls">
+            <div class="control-panel">
+                <div class="control-group">
+                    <h3>文件操作</h3>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button id="scan-btn" style="padding: 10px 20px; white-space: nowrap; width: 350px;">
+                            加载图像数据
+                        </button>
+                        <div id="scan-status" style="font-size: 0.9em; min-height: 20px; display: flex; align-items: center;"></div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>选择检测任务</h3>
+                    <select id="task-select">
+                        <option value="task1">Z-F-3软板划伤</option>
+                        <option value="task2">分割1-柔板露铜</option>
+                        <option value="task3">分割2-HB露铜</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <h3>选择阶段</h3>
+                    <div class="tab-controls">
+                        <div class="tab active" data-tab="settings">设置</div>
+                        <div class="tab" data-tab="results">结果</div>
+                        <div class="tab" data-tab="evaluation">评估</div>
+                        <div class="tab" data-tab="experiment">实验结果</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div class="control-group">
+                    <h3>图像控制</h3>
+                    <div class="image-controls">
+                        <button id="prev-btn">上一张</button>
+                        <button id="next-btn">下一张</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>当前图像信息</h3>
+                    <div class="status-bar" id="image-info">
+                        请先加载图像数据
+                    </div>
+                    <div class="status-bar" id="file-info" style="margin-top: 10px; font-size: 0.9em;">
+                        未加载数据
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 动态布局容器 -->
+        <div class="comparison-view two-column" id="comparison-view">
+            <div class="image-column">
+                <div class="column-header">ADTest</div>
+                <div class="image-container" id="ad-container">
+                    <div style="text-align: center; padding: 50px; color: #666;">
+                        <p>请先加载图像数据</p>
+                    </div>
+                </div>
+                <div class="image-info" id="ad-info">ADTest图像</div>
+            </div>
+            
+            <div class="image-column">
+                <div class="column-header">CLTest</div>
+                <div class="image-container" id="cl-container">
+                    <div style="text-align: center; padding: 50px; color: #666;">
+                        <p>请先加载图像数据</p>
+                    </div>
+                </div>
+                <div class="image-info" id="cl-info">CLTest图像</div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>工业检测图像对比分析系统 &copy; 2023 - 专注于工业视觉检测分析</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const taskSelect = document.getElementById('task-select');
+            const tabs = document.querySelectorAll('.tab');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const comparisonView = document.getElementById('comparison-view');
+            const adContainer = document.getElementById('ad-container');
+            const clContainer = document.getElementById('cl-container');
+            const imageInfo = document.getElementById('image-info');
+            const fileInfo = document.getElementById('file-info');
+            const adInfo = document.getElementById('ad-info');
+            const clInfo = document.getElementById('cl-info');
+            const scanBtn = document.getElementById('scan-btn');
+            const scanStatus = document.getElementById('scan-status');
+            
+            // 当前状态
+            let currentTask = 'task1';
+            let currentStage = 'settings';
+            let currentImageIndex = 0;
+            let imageFiles = {};
+            let isFilesScanned = false;
+
+            // 数据源信息
+            const dataSource = 'https://raw.githubusercontent.com/Jackey-wan/DataTest/main/';
+            
+            // 文件夹结构映射
+            const folderStructure = {
+                task1: {
+                    name: 'Z-F-3软板划伤',
+                    path: 'Z-F-3软板划伤/',
+                    Label: 'Label/',
+                    ADTest: {
+                        settings: 'ADTest/训练/设置/',
+                        results: 'ADTest/训练/结果/',
+                        evaluation: 'ADTest/评估/',
+                        experiment: 'ADTest/实验结果/'
+                    },
+                    CLTest: {
+                        settings: 'CLTest/训练/设置/',
+                        results: 'CLTest/训练/结果/',
+                        evaluation: 'CLTest/评估/',
+                        experiment: 'CLTest/实验结果/'
+                    }
+                },
+                task2: {
+                    name: '分割1-柔板露铜',
+                    path: '分割1-柔板露铜/',
+                    Label: 'Label/',
+                    ADTest: {
+                        settings: 'ADTest/训练/设置/',
+                        results: 'ADTest/训练/结果/',
+                        evaluation: 'ADTest/评估/',
+                        experiment: 'ADTest/实验结果/'
+                    },
+                    CLTest: {
+                        settings: 'CLTest/训练/设置/',
+                        results: 'CLTest/训练/结果/',
+                        evaluation: 'CLTest/评估/',
+                        experiment: 'CLTest/实验结果/'
+                    }
+                },
+                task3: {
+                    name: '分割2-HB露铜',
+                    path: '分割2-HB露铜/',
+                    Label: 'Label/',
+                    ADTest: {
+                        settings: 'ADTest/训练/设置/',
+                        results: 'ADTest/训练/结果/',
+                        evaluation: 'ADTest/评估/',
+                        experiment: 'ADTest/实验结果/'
+                    },
+                    CLTest: {
+                        settings: 'CLTest/训练/设置/',
+                        results: 'CLTest/训练/结果/',
+                        evaluation: 'CLTest/评估/',
+                        experiment: 'CLTest/实验结果/'
+                    }
+                }
+            };
+            
+            // 加载图像数据
+            scanBtn.addEventListener('click', async function() {
+                scanStatus.innerHTML = '<span class="loading"></span> 正在加载图像数据...';
+                scanBtn.disabled = true;
+
+                try {
+                    // 加载文件列表
+                    await loadImageData();
+                    
+                    isFilesScanned = true;
+                    scanStatus.innerHTML = '✅ 数据加载完成！';
+                    
+                    // 启用控制按钮
+                    updateNavigationButtons();
+                    taskSelect.disabled = false;
+                    tabs.forEach(tab => tab.disabled = false);
+                    
+                    // 加载当前图像
+                    loadImage();
+                    
+                } catch (error) {
+                    scanStatus.innerHTML = '❌ 加载失败: ' + error.message;
+                    scanBtn.disabled = false;
+                    console.error('数据加载错误:', error);
+                }
+            });
+
+            // 加载文件
+            async function loadImageData() {
+                // 使用预定义的文件列表
+                imageFiles = {
+                    task1: {
+                        Label: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg', '15.jpg', '16.jpg', '17.jpg', '18.jpg', '19.jpg', '20.jpg'],
+                        ADTest: {
+                            settings: ['set.jpg'],
+                            results: ['line.jpg'],
+                            evaluation: ['assess.jpg'],
+                            experiment: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg', '15.jpg', '16.jpg', '17.jpg', '18.jpg', '19.jpg', '20.jpg']
+                        },
+                        CLTest: {
+                            settings: ['set.jpg'],
+                            results: ['line.jpg'],
+                            evaluation: ['assess.jpg'],
+                            experiment: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg', '15.jpg', '16.jpg', '17.jpg', '18.jpg', '19.jpg', '20.jpg']
+                        }
+                    },
+                    task2: {
+                        Label: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg'],
+                        ADTest: {
+                            settings: ['set.jpg'],
+                            results: ['line.jpg'],
+                            evaluation: ['assess.jpg'],
+                            experiment: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg']
+                        },
+                        CLTest: {
+                            settings: ['set.jpg'],
+                            results: ['line.jpg'],
+                            evaluation: ['assess.jpg'],
+                            experiment: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg']
+                        }
+                    },
+                    task3: {
+                        Label: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg'],
+                        ADTest: {
+                            settings: ['set.jpg'],
+                            results: ['line.jpg'],
+                            evaluation: ['assess.jpg'],
+                            experiment: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg']
+                        },
+                        CLTest: {
+                            settings: ['set.jpg'],
+                            results: ['line.jpg'],
+                            evaluation: ['assess.jpg'],
+                            experiment: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg']
+                        }
+                    }
+                };
+                
+                // 验证文件是否存在
+                await validateDataFiles();
+            }
+
+            // 验证文件是否存在
+            async function validateDataFiles() {
+                try {
+                    const testURL = dataSource + folderStructure.task1.path + 'Label/01.jpg';
+                    const response = await fetch(testURL, { method: 'HEAD' });
+                    if (!response.ok) {
+                        console.warn('数据源访问可能受限');
+                    }
+                } catch (error) {
+                    console.warn('数据连接测试失败:', error);
+                }
+            }
+
+            // 获取完整的图片路径
+            function getImagePath(taskKey, testType, stage, filename) {
+                if (!filename) return null;
+                
+                const folder = folderStructure[taskKey];
+                if (!folder) return null;
+                
+                // 构建完整路径
+                let path = dataSource + folder.path;
+                
+                if (testType === 'Label') {
+                    path += folder.Label;
+                } else if (testType === 'ADTest' || testType === 'CLTest') {
+                    // 根据阶段选择正确的子路径
+                    const stagePathMap = {
+                        'settings': folder[testType].settings,
+                        'results': folder[testType].results,
+                        'evaluation': folder[testType].evaluation,
+                        'experiment': folder[testType].experiment
+                    };
+                    
+                    if (stagePathMap[stage]) {
+                        path += stagePathMap[stage];
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+                
+                // 添加文件名
+                return path + filename;
+            }
+
+            // 获取阶段名称
+            function getStageName(stage) {
+                const stageNames = {
+                    'settings': '设置', 'results': '结果', 'evaluation': '评估', 'experiment': '实验结果'
+                };
+                return stageNames[stage] || stage;
+            }
+
+            // 更新文件信息
+            function updateFileInfo() {
+                if (!isFilesScanned || !imageFiles[currentTask]) {
+                    fileInfo.textContent = '未加载数据';
+                    return;
+                }
+                
+                const task = imageFiles[currentTask];
+                const fileCounts = [];
+                
+                if (task.Label && task.Label.length > 0) {
+                    fileCounts.push(`Label: ${task.Label.length}个`);
+                }
+                if (task.ADTest && task.ADTest.experiment && task.ADTest.experiment.length > 0) {
+                    fileCounts.push(`AD实验: ${task.ADTest.experiment.length}个`);
+                }
+                if (task.CLTest && task.CLTest.experiment && task.CLTest.experiment.length > 0) {
+                    fileCounts.push(`CL实验: ${task.CLTest.experiment.length}个`);
+                }
+                
+                fileInfo.textContent = fileCounts.join(' | ') || '无图像文件';
+            }
+
+            // 更新导航按钮状态
+            function updateNavigationButtons() {
+                if (currentStage === 'experiment' && isFilesScanned && imageFiles[currentTask]) {
+                    const files = imageFiles[currentTask]?.Label || [];
+                    prevBtn.disabled = files.length <= 1;
+                    nextBtn.disabled = files.length <= 1;
+                } else {
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                }
+            }
+
+            // 更新布局
+            function updateLayout() {
+                const comparisonView = document.getElementById('comparison-view');
+                
+                if (currentStage === 'experiment') {
+                    comparisonView.className = 'comparison-view three-column';
+                    
+                    let labelContainer = document.getElementById('label-container');
+                    if (!labelContainer) {
+                        const labelColumn = document.createElement('div');
+                        labelColumn.className = 'image-column';
+                        labelColumn.innerHTML = `
+                            <div class="column-header">Label</div>
+                            <div class="image-container" id="label-container">
+                                <div style="text-align: center; padding: 50px; color: #666;">
+                                    <p>Label图像</p>
+                                </div>
+                            </div>
+                            <div class="image-info" id="label-info">标签图像</div>
+                        `;
+                        comparisonView.insertBefore(labelColumn, comparisonView.firstChild);
+                    }
+                } else {
+                    comparisonView.className = 'comparison-view two-column';
+                    
+                    const labelColumn = document.querySelector('.image-column:has(#label-container)');
+                    if (labelColumn) {
+                        labelColumn.remove();
+                    }
+                }
+            }
+
+            // 获取当前图片文件
+            function getCurrentImageFile(testType, stage) {
+                if (!isFilesScanned || !imageFiles[currentTask]) return null;
+                
+                if (testType === 'Label') {
+                    const files = imageFiles[currentTask].Label;
+                    return files && files.length > 0 ? files[currentImageIndex % files.length] : null;
+                }
+                
+                if (!imageFiles[currentTask][testType] || !imageFiles[currentTask][testType][stage]) {
+                    return null;
+                }
+                
+                const files = imageFiles[currentTask][testType][stage];
+                if (files.length === 0) return null;
+                
+                if (stage === 'experiment') {
+                    return files[currentImageIndex % files.length];
+                } else {
+                    return files[0]; // 设置、结果、评估通常只有一个文件
+                }
+            }
+
+            // 加载图像函数
+            function loadImage() {
+                if (!isFilesScanned) {
+                    const containers = [adContainer, clContainer];
+                    if (currentStage === 'experiment') {
+                        const labelContainer = document.getElementById('label-container');
+                        if (labelContainer) containers.unshift(labelContainer);
+                    }
+                    
+                    containers.forEach(container => {
+                        container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;"><p>请先加载图像数据</p></div>';
+                    });
+                    return;
+                }
+                
+                updateLayout();
+                const folder = folderStructure[currentTask];
+                if (!folder) return;
+                
+                if (currentStage === 'experiment') {
+                    // 实验结果模式：三栏对比
+                    const labelFile = getCurrentImageFile('Label', 'experiment');
+                    const adFile = getCurrentImageFile('ADTest', 'experiment');
+                    const clFile = getCurrentImageFile('CLTest', 'experiment');
+                    
+                    const labelPath = getImagePath(currentTask, 'Label', 'experiment', labelFile);
+                    const adPath = getImagePath(currentTask, 'ADTest', 'experiment', adFile);
+                    const clPath = getImagePath(currentTask, 'CLTest', 'experiment', clFile);
+                    
+                    // 更新三个容器的图像
+                    updateImageContainer(document.getElementById('label-container'), labelPath, 'Label图像', labelFile);
+                    updateImageContainer(adContainer, adPath, 'ADTest实验', adFile);
+                    updateImageContainer(clContainer, clPath, 'CLTest实验', clFile);
+                    
+                    // 更新信息显示
+                    document.getElementById('label-info').textContent = '标签图像';
+                    adInfo.textContent = 'ADTest实验';
+                    clInfo.textContent = 'CLTest实验';
+                    
+                    const files = imageFiles[currentTask]?.Label || [];
+                    imageInfo.textContent = `${folder.name} - 实验结果对比 - 图像 ${currentImageIndex + 1}/${files.length}`;
+                    
+                } else {
+                    // 其他模式：两栏对比
+                    const adFile = getCurrentImageFile('ADTest', currentStage);
+                    const clFile = getCurrentImageFile('CLTest', currentStage);
+                    
+                    const adPath = getImagePath(currentTask, 'ADTest', currentStage, adFile);
+                    const clPath = getImagePath(currentTask, 'CLTest', currentStage, clFile);
+                    
+                    // 只更新ADTest和CLTest容器的图像
+                    updateImageContainer(adContainer, adPath, `ADTest ${getStageName(currentStage)}`, adFile);
+                    updateImageContainer(clContainer, clPath, `CLTest ${getStageName(currentStage)}`, clFile);
+                    
+                    // 更新信息显示
+                    adInfo.textContent = `ADTest ${getStageName(currentStage)}`;
+                    clInfo.textContent = `CLTest ${getStageName(currentStage)}`;
+                    imageInfo.textContent = `${folder.name} - ${getStageName(currentStage)}`;
+                }
+                
+                updateFileInfo();
+                updateNavigationButtons();
+            }
+
+            // 更新图像容器函数
+            function updateImageContainer(container, imageUrl, altText, fileName) {
+                if (!container) return;
+                
+                if (!imageUrl || !fileName) {
+                    container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;"><p>图片未找到</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <img src="${imageUrl}" alt="${altText}" 
+                        onerror="handleImageError(this, '${fileName}')"
+                        class="zoomable-image">
+                `;
+                
+                const img = container.querySelector('img');
+                if (img) setupImageZoom(img, container);
+            }
+
+            // 全局错误处理函数
+            window.handleImageError = function(imgElement, fileName) {
+                console.error('图片加载失败:', imgElement.src);
+                imgElement.onerror = null;
+                imgElement.src = 'https://placehold.co/600x800/ff6b6b/white?text=图片加载失败:' + encodeURIComponent(fileName);
+                
+                // 显示详细的错误信息
+                const container = imgElement.parentElement;
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'text-align: center; color: #ff6b6b; margin-top: 10px; font-size: 12px;';
+                errorDiv.textContent = '加载失败: ' + fileName;
+                container.appendChild(errorDiv);
+            }
+
+            // 设置图片缩放功能
+            function setupImageZoom(img, container) {
+                let scale = 1;
+                let isZoomed = false;
+                let isDragging = false;
+                let startX, startY;
+                let translateX = 0;
+                let translateY = 0;
+                
+                // 双击事件
+                img.addEventListener('dblclick', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (!isZoomed) {
+                        scale = 1.5;
+                        translateX = 0;
+                        translateY = 0;
+                        updateTransform();
+                        this.style.cursor = 'zoom-out';
+                        isZoomed = true;
+                        showResetButton(container);
+                    } else {
+                        scale = 1;
+                        translateX = 0;
+                        translateY = 0;
+                        updateTransform();
+                        this.style.cursor = 'zoom-in';
+                        isZoomed = false;
+                        hideResetButton(container);
+                    }
+                });
+                
+                // 滚轮事件
+                img.addEventListener('wheel', function(e) {
+                    if (!isZoomed) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+                    scale = Math.max(0.5, Math.min(3, scale + delta));
+                    updateTransform();
+                });
+                
+                // 鼠标中键拖拽
+                img.addEventListener('mousedown', function(e) {
+                    if (!isZoomed) return;
+                    if (e.button === 1) {
+                        e.preventDefault();
+                        isDragging = true;
+                        startX = e.clientX - translateX;
+                        startY = e.clientY - translateY;
+                        this.style.cursor = 'grabbing';
+                    }
+                });
+                
+                img.addEventListener('mousemove', function(e) {
+                    if (isDragging && isZoomed) {
+                        e.preventDefault();
+                        translateX = e.clientX - startX;
+                        translateY = e.clientY - startY;
+                        updateTransform();
+                    }
+                });
+                
+                img.addEventListener('mouseup', function(e) {
+                    if (e.button === 1) {
+                        isDragging = false;
+                        this.style.cursor = isZoomed ? 'zoom-out' : 'zoom-in';
+                    }
+                });
+                
+                img.addEventListener('mouseleave', function() {
+                    isDragging = false;
+                    this.style.cursor = isZoomed ? 'zoom-out' : 'zoom-in';
+                });
+                
+                img.addEventListener('click', function(e) {
+                    if (isZoomed && e.button === 0) {
+                        e.stopPropagation();
+                        scale = 1;
+                        translateX = 0;
+                        translateY = 0;
+                        updateTransform();
+                        this.style.cursor = 'zoom-in';
+                        isZoomed = false;
+                        hideResetButton(container);
+                    }
+                });
+                
+                function updateTransform() {
+                    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                }
+                
+                img.style.cursor = 'zoom-in';
+                img.style.transition = 'transform 0.2s ease';
+            }
+
+            // 显示/隐藏重置按钮
+            function showResetButton(container) {
+                let resetBtn = container.querySelector('.reset-view');
+                if (!resetBtn) {
+                    resetBtn = document.createElement('button');
+                    resetBtn.className = 'reset-view';
+                    resetBtn.innerHTML = '↺';
+                    resetBtn.title = '重置视图';
+                    resetBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const img = container.querySelector('img');
+                        if (img) {
+                            img.style.transform = 'translate(0px, 0px) scale(1)';
+                            img.style.cursor = 'zoom-in';
+                        }
+                        resetBtn.style.display = 'none';
+                    });
+                    container.appendChild(resetBtn);
+                }
+                resetBtn.style.display = 'block';
+            }
+
+            function hideResetButton(container) {
+                const resetBtn = container.querySelector('.reset-view');
+                if (resetBtn) {
+                    resetBtn.style.display = 'none';
+                }
+            }
+
+            // 事件监听器
+            taskSelect.addEventListener('change', function() {
+                currentTask = this.value;
+                currentImageIndex = 0;
+                if (isFilesScanned) loadImage();
+            });
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    if (!isFilesScanned) return;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentStage = this.dataset.tab;
+                    currentImageIndex = 0;
+                    loadImage();
+                });
+            });
+
+            prevBtn.addEventListener('click', function() {
+                if (currentStage === 'experiment' && isFilesScanned) {
+                    const files = imageFiles[currentTask]?.Label || [];
+                    currentImageIndex = (currentImageIndex - 1 + files.length) % files.length;
+                    loadImage();
+                }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (currentStage === 'experiment' && isFilesScanned) {
+                    const files = imageFiles[currentTask]?.Label || [];
+                    currentImageIndex = (currentImageIndex + 1) % files.length;
+                    loadImage();
+                }
+            });
+
+            // 初始状态
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            taskSelect.disabled = true;
+            tabs.forEach(tab => tab.disabled = true);
+        });
+    </script>
+</body>
+</html>
